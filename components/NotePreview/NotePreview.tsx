@@ -1,4 +1,4 @@
-import { Note } from "@/types/note";
+import { Note } from "../../types/note";
 import css from "./NotePreview.module.css";
 import { useRouter } from "next/navigation";
 
