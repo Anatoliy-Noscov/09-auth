@@ -1,5 +1,5 @@
-import { api } from "@/app/api/api";
-import { LogInUser, User } from "@/types/user";
+import { api } from "../../app/api/api";
+import { LogInUser, User } from "../../types/user";
 
 export async function register(data: User) {
   const response = await api.post<User>("/auth/register", data);
@@ -8,5 +8,9 @@ export async function register(data: User) {
 
 export async function login(data: User) {
   const response = await api.post<LogInUser>("/auth/login", data);
+  return response.data;
+}
+export async function logout() {
+  const response = await api.post("/auth/logout");
   return response.data;
 }
