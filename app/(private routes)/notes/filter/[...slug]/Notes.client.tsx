@@ -4,7 +4,7 @@ import NoteList from "../../../../../components/NoteList/NoteList";
 import Pagination from "../../../../../components/Pagination/Pagination";
 import SearchBox from "../../../../../components/SearchBox/SearchBox";
 import css from "./NotePage.module.css";
-import { fetchNotes } from "../../../../../lib/api";
+import { fetchNotes } from "../../../../../lib/api/clientApi";
 import { useState } from "react";
 import { useDebounce } from "use-debounce";
 import Loader from "../../../../loading";
