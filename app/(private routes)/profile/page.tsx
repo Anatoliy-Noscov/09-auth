@@ -50,7 +50,7 @@ export default function ProfilePage() {
           </div>
           <div className={css.avatarWrapper}>
             <Image
-              src=""
+              src="Avatar"
               alt="User Avatar"
               width={120}
               height={120}
