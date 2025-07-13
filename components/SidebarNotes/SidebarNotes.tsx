@@ -1,5 +1,5 @@
-import css from "./SidebarNotes.module.css";
 import Link from "next/link";
+import css from "./SidebarNotes.module.css";
 
 interface SidebarNotesProps {
   tags: string[];

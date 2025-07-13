@@ -1,21 +1,22 @@
 "use client";
 
+import Link from "next/link";
 import css from "./TagsMenu.module.css";
 import { useState } from "react";
-import Link from "next/link";
 
 const tags: string[] = ["Work", "Personal", "Meeting", "Shopping", "Todo"];
 
-const TagsMenu = () => {
+export default function TagsMenu() {
   const [isOpen, setIsOpen] = useState(false);
-  const toggle = () => setIsOpen(!isOpen);
+  function toggle() {
+    setIsOpen(!isOpen);
+  }
 
   return (
     <div className={css.menuContainer}>
-      <button onClick={toggle} className={css.menuButton}>
+      <button className={css.menuButton} onClick={toggle}>
         Notes ▾
       </button>
-
       {isOpen && (
         <ul className={css.menuList}>
           <li className={css.menuItem}>
@@ -28,11 +29,11 @@ const TagsMenu = () => {
             </Link>
           </li>
           {tags.map((tag) => (
-            <li key={tag} className={css.menuItem}>
+            <li className={css.menuItem} key={tag}>
               <Link
                 href={`/notes/filter/${tag}`}
-                onClick={toggle}
                 className={css.menuLink}
+                onClick={toggle}
               >
                 {tag}
               </Link>
@@ -42,6 +43,4 @@ const TagsMenu = () => {
       )}
     </div>
   );
-};
-
-export default TagsMenu;
+}

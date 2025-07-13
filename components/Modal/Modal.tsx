@@ -5,11 +5,11 @@ import css from "./Modal.module.css";
 import { useEffect } from "react";
 
 export interface ModalProps {
-  onClose: () => void;
   children: React.ReactNode;
+  onClose: () => void;
 }
 
-export default function Modal({ onClose, children }: ModalProps) {
+export default function Modal({ children, onClose }: ModalProps) {
   function handleBackdrop(event: React.MouseEvent<HTMLDivElement>) {
     if (event.target === event.currentTarget) {
       onClose();
