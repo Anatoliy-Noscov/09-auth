@@ -1,14 +1,14 @@
 import { create } from "zustand";
-import { User } from "../../types/user";
+import { UserResponse } from "../../types/user";
 
 interface AuthStore {
-  user: User | null;
+  user: UserResponse | null;
   isAuthenticated: boolean;
-  setUser: (user: User | null) => void;
+  setUser: (user: UserResponse | null) => void;
   setIsAuthenticated: (isAuthenticated: boolean) => void;
 }
 
-export const useAuthStore = create<AuthStore>((set) => ({
+export const useAuthStore = create<AuthStore>()((set) => ({
   user: null,
   isAuthenticated: false,
   setUser: (user) => set({ user }),

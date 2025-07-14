@@ -1,24 +1,49 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { cookies } from "next/headers";
+import { api } from "./app/api/api";
 
-export function middleware(request: NextRequest) {
-  const accessToken = request.cookies.get("accessToken")?.value;
-  const refreshToken = request.cookies.get("refreshToken")?.value;
+export async function middleware(request: NextRequest) {
+  const cookieStore = cookies();
+  const accessToken = cookieStore.get("accessToken")?.value;
+  const refreshToken = cookieStore.get("refreshToken")?.value;
+
+  if (!accessToken && refreshToken) {
+    try {
+      const response = await api.get("auth/session", {
+        headers: {
+          Cookie: cookieStore.toString(),
+        },
+      });
+
+      if (response.headers["set-cookie"]) {
+        const responseCookies = response.headers["set-cookie"];
+        const nextResponse = NextResponse.next();
+
+        responseCookies.forEach((cookie) => {
+          nextResponse.headers.append("set-cookie", cookie);
+        });
+
+        return nextResponse;
+      }
+    } catch (error) {
+      console.error("Session refresh failed:", error);
+    }
+  }
+
   const isAuthenticated = !!accessToken || !!refreshToken;
+  const isAuthRoute = ["/sign-in", "/sign-up"].some((route) =>
+    request.nextUrl.pathname.startsWith(route)
+  );
+  const isPrivateRoute = ["/profile", "/notes"].some((route) =>
+    request.nextUrl.pathname.startsWith(route)
+  );
 
-  if (request.nextUrl.pathname.startsWith("/profile") && !isAuthenticated) {
+  if (isPrivateRoute && !isAuthenticated) {
     return NextResponse.redirect(new URL("/sign-in", request.url));
   }
 
-  if (request.nextUrl.pathname.startsWith("/notes") && !isAuthenticated) {
-    return NextResponse.redirect(new URL("/sign-in", request.url));
-  }
-
-  if (
-    (request.nextUrl.pathname.startsWith("/sign-in") ||
-      request.nextUrl.pathname.startsWith("/sign-up")) &&
-    isAuthenticated
-  ) {
+  if (isAuthRoute && isAuthenticated) {
     return NextResponse.redirect(new URL("/profile", request.url));
   }
 
@@ -26,5 +51,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/profile/:path*", "/notes/:path*", "/sign-in", "/sign-up"],
 };
