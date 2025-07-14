@@ -26,7 +26,7 @@ export default function SignInPage() {
       setUser(user);
       setIsAuthenticated(true);
       router.push("/profile");
-    } catch (err) {
+    } catch {
       setError("Login failed");
       toast.error("Login failed");
     }

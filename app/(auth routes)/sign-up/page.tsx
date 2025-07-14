@@ -26,7 +26,7 @@ export default function SignUpPage() {
       setUser(user);
       setIsAuthenticated(true);
       router.push("/profile");
-    } catch (err) {
+    } catch {
       setError("Registration failed");
       toast.error("Registration failed");
     }

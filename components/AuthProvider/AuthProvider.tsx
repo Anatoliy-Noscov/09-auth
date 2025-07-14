@@ -25,7 +25,7 @@ export default function AuthProvider({
           setIsAuthenticated(false);
           router.push("/sign-in");
         }
-      } catch (error) {
+      } catch {
         setIsAuthenticated(false);
       }
     }

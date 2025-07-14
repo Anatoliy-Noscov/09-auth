@@ -22,7 +22,7 @@ export default function EditProfilePage() {
       try {
         const currentUser = await getCurrentUser();
         setUsername(currentUser.username);
-      } catch (error) {
+      } catch {
         toast.error("Failed to load user data");
       } finally {
         setLoading(false);
@@ -38,7 +38,7 @@ export default function EditProfilePage() {
       setUser(updatedUser);
       toast.success("Profile updated");
       router.push("/profile");
-    } catch (error) {
+    } catch {
       toast.error("Failed to update profile");
     }
   }
