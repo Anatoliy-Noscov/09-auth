@@ -1,6 +1,6 @@
 "use client";
 
-import css from "./EditProfilePage.module.css";
+import css from "../ProfilePage.module.css";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "../../../../lib/store/authStore";
 import {
