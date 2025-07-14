@@ -1,30 +1,29 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { cookies } from "next/headers";
-import { api } from "./app/api/api";
 
 export async function middleware(request: NextRequest) {
-  const cookieStore = cookies();
-  const accessToken = cookieStore.get("accessToken")?.value;
-  const refreshToken = cookieStore.get("refreshToken")?.value;
+  const accessToken = request.cookies.get("accessToken")?.value;
+  const refreshToken = request.cookies.get("refreshToken")?.value;
+  const response = NextResponse.next();
 
   if (!accessToken && refreshToken) {
     try {
-      const response = await api.get("auth/session", {
-        headers: {
-          Cookie: cookieStore.toString(),
-        },
-      });
+      const authResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/session`,
+        {
+          method: "GET",
+          headers: {
+            Cookie: `refreshToken=${refreshToken}`,
+          },
+        }
+      );
 
-      if (response.headers["set-cookie"]) {
-        const responseCookies = response.headers["set-cookie"];
-        const nextResponse = NextResponse.next();
-
-        responseCookies.forEach((cookie) => {
-          nextResponse.headers.append("set-cookie", cookie);
-        });
-
-        return nextResponse;
+      if (authResponse.ok) {
+        const setCookieHeader = authResponse.headers.get("set-cookie");
+        if (setCookieHeader) {
+          response.headers.set("set-cookie", setCookieHeader);
+        }
+        return response;
       }
     } catch (error) {
       console.error("Session refresh failed:", error);
@@ -47,7 +46,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/profile", request.url));
   }
 
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {
