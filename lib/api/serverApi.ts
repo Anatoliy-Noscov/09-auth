@@ -5,7 +5,6 @@ import { UserResponse } from "../../types/user";
 
 export async function getServerUser(): Promise<UserResponse | null> {
   const cookieStore = cookies();
-
   try {
     const response = await api.get<UserResponse>("/users/me", {
       headers: {
@@ -20,7 +19,6 @@ export async function getServerUser(): Promise<UserResponse | null> {
 
 export async function getServerNote(id: string): Promise<Note | null> {
   const cookieStore = cookies();
-
   try {
     const response = await api.get<Note>(`/notes/${id}`, {
       headers: {

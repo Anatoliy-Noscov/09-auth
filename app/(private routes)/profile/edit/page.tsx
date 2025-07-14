@@ -31,13 +31,13 @@ export default function EditProfilePage() {
     loadUser();
   }, []);
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
+  async function handleAction(formData: FormData) {
     try {
+      const username = formData.get("username") as string;
       const updatedUser = await updateUserProfile({ username });
       setUser(updatedUser);
       toast.success("Profile updated");
-      router.push("/profile");
+      router.back();
     } catch {
       toast.error("Failed to update profile");
     }
@@ -55,16 +55,18 @@ export default function EditProfilePage() {
           width={120}
           height={120}
           className={css.avatar}
+          priority
         />
-        <form className={css.profileInfo} onSubmit={handleSubmit}>
+        <form action={handleAction} className={css.profileInfo}>
           <div className={css.usernameWrapper}>
             <label htmlFor="username">Username:</label>
             <input
               id="username"
+              name="username"
               type="text"
               className={css.input}
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              defaultValue={username}
+              required
             />
           </div>
           <p>Email: {user?.email}</p>
@@ -75,7 +77,7 @@ export default function EditProfilePage() {
             <button
               type="button"
               className={css.cancelButton}
-              onClick={() => router.push("/profile")}
+              onClick={() => router.back()}
             >
               Cancel
             </button>

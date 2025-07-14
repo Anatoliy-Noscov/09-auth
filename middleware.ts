@@ -4,38 +4,36 @@ import type { NextRequest } from "next/server";
 export async function middleware(request: NextRequest) {
   const accessToken = request.cookies.get("accessToken")?.value;
   const refreshToken = request.cookies.get("refreshToken")?.value;
-  const response = NextResponse.next();
+  const currentPath = request.nextUrl.pathname;
 
   if (!accessToken && refreshToken) {
     try {
-      const authResponse = await fetch(
+      const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/auth/session`,
         {
-          method: "GET",
           headers: {
             Cookie: `refreshToken=${refreshToken}`,
           },
         }
       );
 
-      if (authResponse.ok) {
-        const setCookieHeader = authResponse.headers.get("set-cookie");
-        if (setCookieHeader) {
-          response.headers.set("set-cookie", setCookieHeader);
+      if (response.ok) {
+        const setCookie = response.headers.get("set-cookie");
+        if (setCookie) {
+          const nextResponse = NextResponse.redirect(request.nextUrl);
+          nextResponse.headers.set("Set-Cookie", setCookie);
+          return nextResponse;
         }
-        return response;
       }
-    } catch (error) {
-      console.error("Session refresh failed:", error);
+    } catch {
+      console.error("Session refresh failed");
     }
   }
 
-  const isAuthenticated = !!accessToken || !!refreshToken;
-  const isAuthRoute = ["/sign-in", "/sign-up"].some((route) =>
-    request.nextUrl.pathname.startsWith(route)
-  );
+  const isAuthenticated = !!accessToken;
+  const isAuthRoute = ["/sign-in", "/sign-up"].includes(currentPath);
   const isPrivateRoute = ["/profile", "/notes"].some((route) =>
-    request.nextUrl.pathname.startsWith(route)
+    currentPath.startsWith(route)
   );
 
   if (isPrivateRoute && !isAuthenticated) {
@@ -46,7 +44,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/profile", request.url));
   }
 
-  return response;
+  return NextResponse.next();
 }
 
 export const config = {
