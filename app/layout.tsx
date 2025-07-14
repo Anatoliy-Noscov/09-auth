@@ -31,10 +31,12 @@ export default function RootLayout({
         <TanStackProvider>
           <AuthProvider>
             <Header />
-            {children}
-            {modal}
+            <main>
+              {children}
+              {modal}
+            </main>
             <Footer />
-            <Toaster />
+            <Toaster position="top-center" />
           </AuthProvider>
         </TanStackProvider>
       </body>
