@@ -2,6 +2,12 @@ import { api } from "../../app/api/api";
 import { cookies } from "next/headers";
 import { Note } from "../../types/note";
 import { UserResponse } from "../../types/user";
+import { AxiosResponse } from "axios";
+
+interface SessionResponse {
+  accessToken: string;
+  refreshToken: string;
+}
 
 export async function getServerUser(): Promise<UserResponse | null> {
   const cookieStore = cookies();
@@ -31,10 +37,7 @@ export async function getServerNote(id: string): Promise<Note | null> {
   }
 }
 
-export async function checkSession(): Promise<{
-  accessToken: string;
-  refreshToken: string;
-} | null> {
+export async function checkSession(): Promise<AxiosResponse<SessionResponse> | null> {
   const cookieStore = cookies();
   try {
     const response = await api.get("/auth/session", {
@@ -42,18 +45,7 @@ export async function checkSession(): Promise<{
         Cookie: cookieStore.toString(),
       },
     });
-
-    if (
-      response.data &&
-      response.data.accessToken &&
-      response.data.refreshToken
-    ) {
-      return {
-        accessToken: response.data.accessToken,
-        refreshToken: response.data.refreshToken,
-      };
-    }
-    return null;
+    return response; 
   } catch {
     return null;
   }

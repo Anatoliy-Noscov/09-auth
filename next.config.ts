@@ -1,9 +1,18 @@
 module.exports = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "ac.goit.global",
+        pathname: "/**",
+      },
+    ],
+  },
   async rewrites() {
     return [
       {
         source: "/api/:path*",
-        destination: "https://notehub-api.goit.study/:path*",
+        destination: "https://notehub-api.goit.study/api/:path*",
       },
     ];
   },
@@ -16,10 +25,6 @@ module.exports = {
           {
             key: "Access-Control-Allow-Origin",
             value: process.env.NEXT_PUBLIC_ORIGIN || "http://localhost:3000",
-          },
-          {
-            key: "Access-Control-Allow-Methods",
-            value: "GET,OPTIONS,PATCH,DELETE,POST,PUT",
           },
         ],
       },
