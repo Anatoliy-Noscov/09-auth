@@ -1,38 +1,43 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { cookies } from "next/headers";
-import { checkSession } from "./lib/api/serverApi";
 
 export async function middleware(request: NextRequest) {
-  const cookieStore = cookies();
-  const accessToken = cookieStore.get("accessToken")?.value;
-  const refreshToken = cookieStore.get("refreshToken")?.value;
+  const accessToken = request.cookies.get("accessToken")?.value;
+  const refreshToken = request.cookies.get("refreshToken")?.value;
   const currentPath = request.nextUrl.pathname;
 
   if (!accessToken && refreshToken) {
     try {
-      const session = await checkSession();
+      const response = await fetch(
+        "https://notehub-api.goit.study/api/auth/session",
+        {
+          headers: {
+            Cookie: `refreshToken=${refreshToken}`,
+          },
+        }
+      );
 
-      if (session?.data) {
-        const response = NextResponse.redirect(request.nextUrl);
+      if (response.ok) {
+        const data = await response.json();
+        const res = NextResponse.next();
 
-        response.cookies.set({
+        res.cookies.set({
           name: "accessToken",
-          value: session.data.accessToken,
+          value: data.accessToken,
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
           path: "/",
         });
 
-        response.cookies.set({
+        res.cookies.set({
           name: "refreshToken",
-          value: session.data.refreshToken,
+          value: data.refreshToken,
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
           path: "/",
         });
 
-        return response;
+        return res;
       }
     } catch (error) {
       console.error("Session refresh failed:", error);
