@@ -13,7 +13,7 @@ export default function AuthProvider({
 }) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const { user, setUser, setIsAuthenticated } = useAuthStore();
+  const { setUser, setIsAuthenticated } = useAuthStore();
 
   useEffect(() => {
     async function verifyAuth() {
