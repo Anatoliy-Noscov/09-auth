@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { checkSession } from "./lib/api/serverApi";
+import { api } from "./app/api/api";
 
 export async function middleware(request: NextRequest) {
   const accessToken = request.cookies.get("accessToken")?.value;
@@ -9,12 +9,22 @@ export async function middleware(request: NextRequest) {
 
   if (!accessToken && refreshToken) {
     try {
-      const session = await checkSession();
-      if (session) {
-        const response = NextResponse.next();
-        response.cookies.set("accessToken", session.accessToken);
-        response.cookies.set("refreshToken", session.refreshToken);
-        return response;
+      const response = await fetch(
+        "https://notehub-api.goit.study/auth/session",
+        {
+          headers: {
+            Cookie: `refreshToken=${refreshToken}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const setCookie = response.headers.get("set-cookie");
+        if (setCookie) {
+          const nextResponse = NextResponse.next();
+          nextResponse.headers.set("Set-Cookie", setCookie);
+          return nextResponse;
+        }
       }
     } catch (error) {
       console.error("Session refresh failed:", error);

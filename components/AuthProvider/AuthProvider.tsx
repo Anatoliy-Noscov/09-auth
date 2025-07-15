@@ -13,7 +13,7 @@ export default function AuthProvider({
 }) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const { setUser, setIsAuthenticated } = useAuthStore();
+  const { user, setUser, setIsAuthenticated } = useAuthStore();
 
   useEffect(() => {
     async function verifyAuth() {
@@ -29,6 +29,10 @@ export default function AuthProvider({
         const userData = await getCurrentUser();
         setUser(userData);
         setIsAuthenticated(true);
+
+        if (window.location.pathname.includes("/sign-")) {
+          router.push("/profile");
+        }
       } catch (error) {
         console.error("Auth verification failed:", error);
         setIsAuthenticated(false);

@@ -43,10 +43,17 @@ export async function checkSession(): Promise<{
       },
     });
 
-    return {
-      accessToken: response.data.accessToken,
-      refreshToken: response.data.refreshToken,
-    };
+    if (
+      response.data &&
+      response.data.accessToken &&
+      response.data.refreshToken
+    ) {
+      return {
+        accessToken: response.data.accessToken,
+        refreshToken: response.data.refreshToken,
+      };
+    }
+    return null;
   } catch {
     return null;
   }
