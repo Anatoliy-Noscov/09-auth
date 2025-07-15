@@ -30,3 +30,24 @@ export async function getServerNote(id: string): Promise<Note | null> {
     return null;
   }
 }
+
+export async function checkSession(): Promise<{
+  accessToken: string;
+  refreshToken: string;
+} | null> {
+  const cookieStore = cookies();
+  try {
+    const response = await api.get("/auth/session", {
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return {
+      accessToken: response.data.accessToken,
+      refreshToken: response.data.refreshToken,
+    };
+  } catch {
+    return null;
+  }
+}

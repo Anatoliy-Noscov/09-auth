@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { checkSession } from "./lib/api/serverApi";
 
 export async function middleware(request: NextRequest) {
   const accessToken = request.cookies.get("accessToken")?.value;
@@ -8,39 +9,27 @@ export async function middleware(request: NextRequest) {
 
   if (!accessToken && refreshToken) {
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/session`,
-        {
-          headers: {
-            Cookie: `refreshToken=${refreshToken}`,
-          },
-        }
-      );
-
-      if (response.ok) {
-        const setCookie = response.headers.get("set-cookie");
-        if (setCookie) {
-          const nextResponse = NextResponse.redirect(request.nextUrl);
-          nextResponse.headers.set("Set-Cookie", setCookie);
-          return nextResponse;
-        }
+      const session = await checkSession();
+      if (session) {
+        const response = NextResponse.next();
+        response.cookies.set("accessToken", session.accessToken);
+        response.cookies.set("refreshToken", session.refreshToken);
+        return response;
       }
-    } catch {
-      console.error("Session refresh failed");
+    } catch (error) {
+      console.error("Session refresh failed:", error);
     }
   }
 
-  const isAuthenticated = !!accessToken;
   const isAuthRoute = ["/sign-in", "/sign-up"].includes(currentPath);
-  const isPrivateRoute = ["/profile", "/notes"].some((route) =>
-    currentPath.startsWith(route)
-  );
+  const isPrivateRoute =
+    currentPath.startsWith("/profile") || currentPath.startsWith("/notes");
 
-  if (isPrivateRoute && !isAuthenticated) {
+  if (isPrivateRoute && !accessToken) {
     return NextResponse.redirect(new URL("/sign-in", request.url));
   }
 
-  if (isAuthRoute && isAuthenticated) {
+  if (isAuthRoute && accessToken) {
     return NextResponse.redirect(new URL("/profile", request.url));
   }
 

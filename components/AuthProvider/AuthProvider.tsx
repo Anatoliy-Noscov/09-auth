@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "../../lib/store/authStore";
 import { checkSession, getCurrentUser } from "../../lib/api/clientApi";
@@ -11,32 +11,37 @@ export default function AuthProvider({
 }: {
   children: React.ReactNode;
 }) {
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const { user, setUser, setIsAuthenticated } = useAuthStore();
+  const { setUser, setIsAuthenticated } = useAuthStore();
 
   useEffect(() => {
     async function verifyAuth() {
       try {
         const session = await checkSession();
-        if (session) {
-          const userData = await getCurrentUser();
-          setUser(userData);
-          setIsAuthenticated(true);
-        } else {
+
+        if (!session) {
           setIsAuthenticated(false);
           router.push("/sign-in");
+          return;
         }
+
+        const userData = await getCurrentUser();
+        setUser(userData);
+        setIsAuthenticated(true);
       } catch (error) {
         console.error("Auth verification failed:", error);
         setIsAuthenticated(false);
         router.push("/sign-in");
+      } finally {
+        setIsLoading(false);
       }
     }
 
     verifyAuth();
   }, [router, setUser, setIsAuthenticated]);
 
-  if (!user) return <Loader />;
+  if (isLoading) return <Loader />;
 
   return <>{children}</>;
 }
