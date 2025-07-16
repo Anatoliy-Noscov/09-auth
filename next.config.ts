@@ -12,7 +12,7 @@ module.exports = {
     return [
       {
         source: "/api/:path*",
-        destination: "https://notehub-api.goit.study/api/:path*",
+        destination: `${process.env.NEXT_PUBLIC_API_PROXY_TARGET || "https://notehub-api.goit.study"}/api/:path*`,
       },
     ];
   },
@@ -25,6 +25,14 @@ module.exports = {
           {
             key: "Access-Control-Allow-Origin",
             value: process.env.NEXT_PUBLIC_ORIGIN || "http://localhost:3000",
+          },
+          {
+            key: "Access-Control-Allow-Methods",
+            value: "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+          },
+          {
+            key: "Access-Control-Allow-Headers",
+            value: "Content-Type, Authorization",
           },
         ],
       },
