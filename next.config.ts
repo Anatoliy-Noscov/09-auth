@@ -12,7 +12,7 @@ module.exports = {
     return [
       {
         source: "/api/:path*",
-        destination: `${process.env.NEXT_PUBLIC_API_PROXY_TARGET || "https://notehub-api.goit.study"}/api/:path*`,
+        destination: "https://notehub-api.goit.study/api/:path*",
       },
     ];
   },
