@@ -1,32 +1,25 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { api } from "../../api";
-import { cookies } from "next/headers";
-import { parse } from "cookie";
 
-export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const apiRes = await api.post("auth/login", body);
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const response = await api.post("/auth/login", body);
 
-  const cookieStore = await cookies();
-  const setCookie = apiRes.headers["set-cookie"];
+    const result = NextResponse.json(response.data);
+    result.cookies.set("accessToken", response.data.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+    });
 
-  if (setCookie) {
-    const cookieArray = Array.isArray(setCookie) ? setCookie : [setCookie];
-    for (const cookieStr of cookieArray) {
-      const parsed = parse(cookieStr);
-      const options = {
-        expires: parsed.Expires ? new Date(parsed.Expires) : undefined,
-        path: parsed.Path,
-        maxAge: Number(parsed["Max-Age"]),
-      };
-      if (parsed.accessToken)
-        cookieStore.set("accessToken", parsed.accessToken, options);
-      if (parsed.refreshToken)
-        cookieStore.set("refreshToken", parsed.refreshToken, options);
-    }
-
-    return NextResponse.json(apiRes.data);
+    return result;
+  } catch (error) {
+    console.error("Login failed:", error);
+    return NextResponse.json(
+      { error: "Authentication failed" },
+      { status: 401 }
+    );
   }
-
-  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 }

@@ -1,12 +1,10 @@
 "use client";
-
-import css from "./SignInPage.module.css";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "../../../lib/store/authStore";
 import { login } from "../../../lib/api/clientApi";
 import { FormEvent, useState } from "react";
 import { toast } from "react-hot-toast";
-import { UserCredentials } from "../../../types/user";
+import css from "./SignInPage.module.css";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -16,18 +14,18 @@ export default function SignInPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const credentials: UserCredentials = {
-      email: formData.get("email") as string,
-      password: formData.get("password") as string,
-    };
 
     try {
-      const user = await login(credentials);
+      const user = await login({
+        email: formData.get("email") as string,
+        password: formData.get("password") as string,
+      });
       setUser(user);
       setIsAuthenticated(true);
       router.push("/profile");
-    } catch {
-      setError("Login failed");
+    } catch (error) {
+      console.error("Login error details:", error);
+      setError("Login failed. Check console for details.");
       toast.error("Login failed");
     }
   }

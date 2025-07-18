@@ -2,54 +2,46 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
+  const origin = request.nextUrl.origin;
+  const path = request.nextUrl.pathname;
   const accessToken = request.cookies.get("accessToken")?.value;
   const refreshToken = request.cookies.get("refreshToken")?.value;
-  const currentPath = request.nextUrl.pathname;
 
-  if (!accessToken && refreshToken) {
-    try {
-      const response = await fetch(
-        "https://notehub-api.goit.study/api/auth/session",
-        {
-          headers: {
-            Cookie: `refreshToken=${refreshToken}`,
-          },
-        }
-      );
+  const response = NextResponse.next();
+  response.headers.set("Access-Control-Allow-Origin", origin);
+  response.headers.set("Access-Control-Allow-Credentials", "true");
+  response.headers.set(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS"
+  );
+  response.headers.set(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization"
+  );
 
-      if (response.ok) {
-        const data = await response.json();
-        const res = NextResponse.next();
-
-        res.cookies.set({
-          name: "accessToken",
-          value: data.accessToken,
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          path: "/",
-        });
-
-        res.cookies.set({
-          name: "refreshToken",
-          value: data.refreshToken,
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          path: "/",
-        });
-
-        return res;
-      }
-    } catch (error) {
-      console.error("Session refresh failed:", error);
-      return NextResponse.redirect(new URL("/sign-in", request.url));
-    }
-  }
-
-  const isAuthRoute = ["/sign-in", "/sign-up"].includes(currentPath);
   const isPrivateRoute =
-    currentPath.startsWith("/profile") || currentPath.startsWith("/notes");
+    path.startsWith("/profile") || path.startsWith("/notes");
+  const isAuthRoute = ["/sign-in", "/sign-up"].includes(path);
 
   if (isPrivateRoute && !accessToken) {
+    if (refreshToken) {
+      try {
+        const refreshResponse = await fetch(`${origin}/api/auth/session`, {
+          headers: { Cookie: `refreshToken=${refreshToken}` },
+        });
+
+        if (refreshResponse.ok) {
+          const data = await refreshResponse.json();
+          response.cookies.set("accessToken", data.accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+          });
+          return response;
+        }
+      } catch (error) {
+        console.error("Token refresh failed:", error);
+      }
+    }
     return NextResponse.redirect(new URL("/sign-in", request.url));
   }
 
@@ -57,7 +49,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/profile", request.url));
   }
 
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {

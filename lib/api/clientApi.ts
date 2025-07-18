@@ -13,8 +13,16 @@ export async function register(data: UserCredentials): Promise<UserResponse> {
 }
 
 export async function login(data: UserCredentials): Promise<LogInUser> {
-  const response = await api.post<LogInUser>("/auth/login", data);
-  return response.data;
+  try {
+    const response = await api.post("/auth/login", {
+      email: data.email,
+      password: data.password,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Full error details:", error);
+    throw error;
+  }
 }
 
 export async function logout(): Promise<void> {
@@ -23,7 +31,9 @@ export async function logout(): Promise<void> {
 
 export async function checkSession(): Promise<UserResponse | null> {
   try {
-    const response = await api.get<UserResponse>("/auth/session");
+    const response = await api.get<UserResponse>("/auth/session", {
+      withCredentials: false,
+    });
     return response.data;
   } catch {
     return null;
