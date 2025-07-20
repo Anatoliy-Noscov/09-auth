@@ -20,12 +20,20 @@ export default function SignInPage() {
     const formData = new FormData(event.currentTarget);
 
     try {
-      const user = await login({
+      await login({
         email: formData.get("email") as string,
         password: formData.get("password") as string,
       });
 
-      // Адаптация пользователя к типу User
+      const session = await fetch("/api/auth/session", {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (!session.ok) throw new Error("Failed to fetch user session");
+
+      const user = await session.json();
+
       const adaptedUser = {
         name: user.username,
         email: user.email,
@@ -33,14 +41,14 @@ export default function SignInPage() {
       };
 
       setUser(adaptedUser);
+      toast.success("Successfully logged in!");
+      router.push("/profile");
     } catch (error) {
-      console.error("Login error details:", error);
-      setError("Login failed. Check console for details.");
+      console.error("Login error:", error);
+      setError("Login failed. Check your credentials.");
       toast.error("Login failed");
       clearIsAuthenticated();
-      return;
     }
-    router.push("/profile");
   }
 
   return (

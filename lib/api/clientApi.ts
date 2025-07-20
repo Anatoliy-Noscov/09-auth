@@ -1,62 +1,55 @@
-import { api } from "../../app/api/api";
-import { CreateNoteValues, FetchNotesValues, Note } from "../../types/note";
-import {
-  LogInUser,
-  UpdateUser,
-  UserCredentials,
-  UserResponse,
-} from "../../types/user";
+import axios from "axios";
+import { CreateNoteValues, FetchNotesValues, Note } from "@/types/note";
+import { UserCredentials, UserResponse, UpdateUser } from "@/types/user";
 
-export async function register(data: UserCredentials): Promise<UserResponse> {
-  const response = await api.post<UserResponse>("/auth/register", data);
-  return response.data;
-}
+const client = axios.create({
+  baseURL: "/api",
+  withCredentials: true,
+});
 
-export async function login(data: UserCredentials): Promise<LogInUser> {
+export const register = async (
+  data: UserCredentials
+): Promise<UserResponse> => {
+  const res = await client.post("/auth/register", data);
+  return res.data;
+};
+
+export const login = async (data: UserCredentials): Promise<UserResponse> => {
+  const res = await client.post("/auth/login", data);
+  return res.data;
+};
+
+export const logout = async (): Promise<void> => {
+  await client.post("/auth/logout");
+};
+
+export const checkSession = async (): Promise<UserResponse | null> => {
   try {
-    const response = await api.post("/auth/login", {
-      email: data.email,
-      password: data.password,
-    });
-    return response.data;
-  } catch (error) {
-    console.error("Full error details:", error);
-    throw error;
-  }
-}
-
-export async function logout(): Promise<void> {
-  await api.post("/auth/logout");
-}
-
-export async function checkSession(): Promise<UserResponse | null> {
-  try {
-    const response = await api.get<UserResponse>("/auth/session", {
-      withCredentials: false,
-    });
-    return response.data;
+    const res = await client.get("/auth/session");
+    return res.data;
   } catch {
     return null;
   }
-}
+};
 
-export async function getCurrentUser(): Promise<UserResponse> {
-  const response = await api.get<UserResponse>("/users/me");
-  return response.data;
-}
+export const getCurrentUser = async (): Promise<UserResponse> => {
+  const res = await client.get("/users/me");
+  return res.data;
+};
 
-export async function updateUserProfile(
+export const updateUserProfile = async (
   data: UpdateUser
-): Promise<UserResponse> {
-  const response = await api.patch<UserResponse>("/users/me", data);
-  return response.data;
-}
+): Promise<UserResponse> => {
+  const res = await client.patch("/users/me", data);
+  return res.data;
+};
 
-export async function fetchNotes(
+// Работа с заметками
+export const fetchNotes = async (
   search: string,
   page: number,
   tag?: string
-): Promise<FetchNotesValues> {
+): Promise<FetchNotesValues> => {
   const params = {
     search: search?.trim() || undefined,
     tag: tag?.trim() || undefined,
@@ -64,21 +57,21 @@ export async function fetchNotes(
     perPage: 12,
   };
 
-  const response = await api.get<FetchNotesValues>("/notes", { params });
-  return response.data;
-}
+  const res = await client.get("/notes", { params });
+  return res.data;
+};
 
-export async function fetchNoteById(id: string | number): Promise<Note> {
-  const response = await api.get<Note>(`/notes/${id}`);
-  return response.data;
-}
+export const fetchNoteById = async (id: string | number): Promise<Note> => {
+  const res = await client.get(`/notes/${id}`);
+  return res.data;
+};
 
-export async function createNote(data: CreateNoteValues): Promise<Note> {
-  const response = await api.post<Note>("/notes", data);
-  return response.data;
-}
+export const createNote = async (data: CreateNoteValues): Promise<Note> => {
+  const res = await client.post("/notes", data);
+  return res.data;
+};
 
-export async function deleteNote(id: string | number): Promise<Note> {
-  const response = await api.delete<Note>(`/notes/${id}`);
-  return response.data;
-}
+export const deleteNote = async (id: string | number): Promise<Note> => {
+  const res = await client.delete(`/notes/${id}`);
+  return res.data;
+};
