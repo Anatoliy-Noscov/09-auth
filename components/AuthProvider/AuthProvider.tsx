@@ -1,31 +1,53 @@
 "use client";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+
+import { useEffect, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { checkSession, getCurrentUser } from "../../lib/api/clientApi";
 import { useAuthStore } from "../../lib/store/authStore";
-import { checkSession } from "../../lib/api/clientApi";
+import Loader from "../../app/loading";
 
 export default function AuthProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { setUser, setIsAuthenticated } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(true);
+  const setUser = useAuthStore((state) => state.setUser);
+  const clearIsAuthenticated = useAuthStore(
+    (state) => state.clearIsAuthenticated
+  );
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    async function verifyAuth() {
+    const init = async () => {
       try {
-        const user = await checkSession();
-        setUser(user);
-        setIsAuthenticated(!!user);
-      } catch (error) {
-        console.error("Auth verification failed:", error);
-        setIsAuthenticated(false);
-        router.push("/sign-in");
-      }
-    }
-    verifyAuth();
-  }, [setUser, setIsAuthenticated, router]);
+        const session = await checkSession();
+        if (!session) throw new Error("No session");
 
-  return <>{children}</>;
+        const user = await getCurrentUser();
+
+        const adaptedUser = {
+          name: user.username,
+          email: user.email,
+          avatarURL: user.avatar ?? "/default-avatar.png",
+        };
+
+        setUser(adaptedUser);
+      } catch {
+        clearIsAuthenticated();
+        if (pathname.startsWith("/profile") || pathname.startsWith("/notes")) {
+          router.replace("/sign-in");
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    init();
+  }, [pathname, setUser, clearIsAuthenticated, router]);
+
+  if (isLoading) return <Loader />;
+
+  return children;
 }

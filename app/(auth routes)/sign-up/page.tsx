@@ -10,7 +10,10 @@ import { UserCredentials } from "../../../types/user";
 
 export default function SignUpPage() {
   const router = useRouter();
-  const { setIsAuthenticated, setUser } = useAuthStore();
+  const setUser = useAuthStore((state) => state.setUser);
+  const clearIsAuthenticated = useAuthStore(
+    (state) => state.clearIsAuthenticated
+  );
   const [error, setError] = useState("");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -23,13 +26,22 @@ export default function SignUpPage() {
 
     try {
       const user = await register(credentials);
-      setUser(user);
-      setIsAuthenticated(true);
-      router.push("/profile");
+
+      // Адаптация пользователя к типу User
+      const adaptedUser = {
+        name: user.username,
+        email: user.email,
+        avatarURL: user.avatar ?? "/default-avatar.png",
+      };
+
+      setUser(adaptedUser);
     } catch {
       setError("Registration failed");
       toast.error("Registration failed");
+      clearIsAuthenticated();
+      return;
     }
+    router.push("/profile");
   }
 
   return (

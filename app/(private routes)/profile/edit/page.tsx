@@ -35,7 +35,15 @@ export default function EditProfilePage() {
     try {
       const username = formData.get("username") as string;
       const updatedUser = await updateUserProfile({ username });
-      setUser(updatedUser);
+
+      // Адаптация к User
+      const adaptedUser = {
+        name: updatedUser.username,
+        email: updatedUser.email,
+        avatarURL: updatedUser.avatar ?? "/default-avatar.png",
+      };
+
+      setUser(adaptedUser);
       toast.success("Profile updated");
       router.back();
     } catch {
@@ -50,7 +58,7 @@ export default function EditProfilePage() {
       <div className={css.profileCard}>
         <h1 className={css.formTitle}>Edit Profile</h1>
         <Image
-          src={user?.avatar || "/default-avatar.png"}
+          src={user?.avatarURL || "/default-avatar.png"}
           alt="User Avatar"
           width={120}
           height={120}

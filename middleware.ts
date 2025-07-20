@@ -1,57 +1,32 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { checkSession } from "./lib/api/serverApi";
+
+const PUBLIC_ROUTES = ["/sign-in", "/sign-up"];
+const PRIVATE_ROUTES = ["/profile", "/notes"];
 
 export async function middleware(request: NextRequest) {
-  const origin = request.nextUrl.origin;
-  const path = request.nextUrl.pathname;
-  const accessToken = request.cookies.get("accessToken")?.value;
-  const refreshToken = request.cookies.get("refreshToken")?.value;
+  const pathname = request.nextUrl.pathname;
 
-  const response = NextResponse.next();
-  response.headers.set("Access-Control-Allow-Origin", origin);
-  response.headers.set("Access-Control-Allow-Credentials", "true");
-  response.headers.set(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE, OPTIONS"
+  const isPublicRoute = PUBLIC_ROUTES.some((route) =>
+    pathname.startsWith(route)
   );
-  response.headers.set(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization"
+  const isPrivateRoute = PRIVATE_ROUTES.some((route) =>
+    pathname.startsWith(route)
   );
 
-  const isPrivateRoute =
-    path.startsWith("/profile") || path.startsWith("/notes");
-  const isAuthRoute = ["/sign-in", "/sign-up"].includes(path);
+  const session = await checkSession();
 
-  if (isPrivateRoute && !accessToken) {
-    if (refreshToken) {
-      try {
-        const refreshResponse = await fetch(`${origin}/api/auth/session`, {
-          headers: { Cookie: `refreshToken=${refreshToken}` },
-        });
-
-        if (refreshResponse.ok) {
-          const data = await refreshResponse.json();
-          response.cookies.set("accessToken", data.accessToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-          });
-          return response;
-        }
-      } catch (error) {
-        console.error("Token refresh failed:", error);
-      }
-    }
+  if (!session && isPrivateRoute) {
     return NextResponse.redirect(new URL("/sign-in", request.url));
   }
 
-  if (isAuthRoute && accessToken) {
+  if (session && isPublicRoute) {
     return NextResponse.redirect(new URL("/profile", request.url));
   }
 
-  return response;
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/profile/:path*", "/notes/:path*", "/sign-in", "/sign-up"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };

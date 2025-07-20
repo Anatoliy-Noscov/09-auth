@@ -8,15 +8,14 @@ import { useRouter } from "next/navigation";
 
 export default function AuthNavigation() {
   const router = useRouter();
-  const { user, isAuthenticated, setUser, setIsAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, clearIsAuthenticated } = useAuthStore();
 
   async function handleLogout() {
     if (!confirm("Are you sure you want to logout?")) return;
 
     try {
       await logout();
-      setUser(null);
-      setIsAuthenticated(false);
+      clearIsAuthenticated();
       router.push("/sign-in");
     } catch (error) {
       console.error("Logout failed:", error);

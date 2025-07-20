@@ -1,4 +1,5 @@
 "use client";
+
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "../../../lib/store/authStore";
 import { login } from "../../../lib/api/clientApi";
@@ -8,7 +9,10 @@ import css from "./SignInPage.module.css";
 
 export default function SignInPage() {
   const router = useRouter();
-  const { setUser, setIsAuthenticated } = useAuthStore();
+  const setUser = useAuthStore((state) => state.setUser);
+  const clearIsAuthenticated = useAuthStore(
+    (state) => state.clearIsAuthenticated
+  );
   const [error, setError] = useState("");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -20,14 +24,23 @@ export default function SignInPage() {
         email: formData.get("email") as string,
         password: formData.get("password") as string,
       });
-      setUser(user);
-      setIsAuthenticated(true);
-      router.push("/profile");
+
+      // Адаптация пользователя к типу User
+      const adaptedUser = {
+        name: user.username,
+        email: user.email,
+        avatarURL: user.avatar ?? "/default-avatar.png",
+      };
+
+      setUser(adaptedUser);
     } catch (error) {
       console.error("Login error details:", error);
       setError("Login failed. Check console for details.");
       toast.error("Login failed");
+      clearIsAuthenticated();
+      return;
     }
+    router.push("/profile");
   }
 
   return (
