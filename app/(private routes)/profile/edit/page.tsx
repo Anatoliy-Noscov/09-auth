@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import css from "./ProfilePage.module.css";
+import css from "./EditProfile.module.css";
 import { getMe, updateMe } from "../../../../lib/api/clientApi";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
