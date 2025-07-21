@@ -1,21 +1,15 @@
-export interface UserCredentials {
+export interface User {
+  username: string;
+  email: string;
+}
+
+export interface LogInUser {
+  username: string;
+  email: string;
+  avatar: string;
+}
+
+export interface AuthRequest {
   email: string;
   password: string;
-}
-
-export interface UserResponse {
-  id: string;
-  username: string;
-  email: string;
-  avatar?: string;
-}
-
-export interface UpdateUser {
-  username: string;
-  avatar?: string;
-}
-
-export interface LogInUser extends UserResponse {
-  accessToken: string;
-  refreshToken: string;
 }

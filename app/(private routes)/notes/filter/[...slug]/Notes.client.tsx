@@ -1,39 +1,40 @@
 "use client";
+
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import NoteList from "../../../../../components/NoteList/NoteList";
-import Pagination from "../../../../../components/Pagination/Pagination";
-import SearchBox from "../../../../../components/SearchBox/SearchBox";
 import css from "./NotePage.module.css";
-import { fetchNotes } from "../../../../../lib/api/clientApi";
 import { useState } from "react";
 import { useDebounce } from "use-debounce";
-import Loader from "../../../../loading";
 import ErrorMessage from "./error";
+import Loader from "../../../../../app/loading";
+import { fetchNotes } from "../../../../../lib/api/clientApi";
+import SearchBox from "../../../../../components/SearchBox/SearchBox";
+import Pagination from "../../../../../components/Pagination/Pagination";
+import NoteList from "../../../../../components/NoteList/NoteList";
 import { FetchNotesValues } from "../../../../../types/note";
 import Link from "next/link";
 
 interface NotesClientProps {
-  initialPage: number;
   initialQuery: string;
+  initialPage: number;
   initialTag?: string;
   initialData: FetchNotesValues | undefined;
 }
 
 export default function NotesClient({
-  initialPage,
   initialQuery,
+  initialPage,
   initialTag,
   initialData,
 }: NotesClientProps) {
   const [query, setQuery] = useState<string>(initialQuery);
   const [currentPage, setCurrentPage] = useState<number>(initialPage);
-  const [debouncedQuery] = useDebounce(query, 500);
+  const [debounceQuery] = useDebounce(query, 500);
 
   const { data, isLoading, isError, error, isSuccess } = useQuery({
-    queryKey: ["notes", debouncedQuery, initialTag, currentPage],
-    queryFn: () => fetchNotes(debouncedQuery, currentPage, initialTag),
+    queryKey: ["notes", debounceQuery, initialTag, currentPage],
+    queryFn: () => fetchNotes(debounceQuery, currentPage, initialTag),
     placeholderData: keepPreviousData,
-    refetchOnMount: false,
+    refetchOnMount: true,
     initialData,
   });
 

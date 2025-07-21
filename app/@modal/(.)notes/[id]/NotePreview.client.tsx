@@ -9,10 +9,9 @@ import { useParams, useRouter } from "next/navigation";
 export default function NotePreviewClient() {
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
-  const noteId = +id;
   const { data } = useQuery({
-    queryKey: ["note", noteId],
-    queryFn: () => fetchNoteById(noteId),
+    queryKey: ["note", id],
+    queryFn: () => fetchNoteById(id),
     refetchOnMount: false,
   });
 

@@ -1,71 +1,63 @@
 "use client";
 
-import css from "../ProfilePage.module.css";
-import { useRouter } from "next/navigation";
-import { useAuthStore } from "../../../../lib/store/authStore";
-import {
-  updateUserProfile,
-  getCurrentUser,
-} from "../../../../lib/api/clientApi";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import css from "./EditProfilePage.module.css";
+import { getMe, updateMe } from "../../../../lib/api/clientApi";
 import Image from "next/image";
-import { toast } from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import { useAuthUser } from "../../../../lib/store/authStore";
 
 export default function EditProfilePage() {
   const router = useRouter();
-  const { user, setUser } = useAuthStore();
-  const [username, setUsername] = useState("");
-  const [loading, setLoading] = useState(true);
+
+  const [userName, setUserName] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+  const [userImage, setUserImage] = useState("");
+
+  const [error, setError] = useState("");
+
+  const setUser = useAuthUser((state) => state.setUser);
 
   useEffect(() => {
-    async function loadUser() {
-      try {
-        const currentUser = await getCurrentUser();
-        setUsername(currentUser.username);
-      } catch {
-        toast.error("Failed to load user data");
-      } finally {
-        setLoading(false);
-      }
+    async function fetchMe() {
+      await getMe().then((user) => {
+        setUserName(user.username);
+        setUserEmail(user.email);
+        setUserImage(user.avatar ?? "");
+      });
     }
-    loadUser();
+    fetchMe();
   }, []);
 
-  async function handleAction(formData: FormData) {
-    try {
-      const username = formData.get("username") as string;
-      const updatedUser = await updateUserProfile({ username });
-
-      // Адаптация к User
-      const adaptedUser = {
-        name: updatedUser.username,
-        email: updatedUser.email,
-        avatarURL: updatedUser.avatar ?? "/default-avatar.png",
-      };
-
-      setUser(adaptedUser);
-      toast.success("Profile updated");
-      router.back();
-    } catch {
-      toast.error("Failed to update profile");
-    }
+  function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
+    setUserName(event.target.value);
   }
 
-  if (loading) return <div>Loading...</div>;
+  async function handleSave(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    try {
+      const res = await updateMe({ username: userName });
+      setUser(res);
+      router.push("/profile");
+    } catch (error) {
+      setError(String(error));
+    }
+  }
 
   return (
     <main className={css.mainContent}>
       <div className={css.profileCard}>
         <h1 className={css.formTitle}>Edit Profile</h1>
+
         <Image
-          src={user?.avatarURL || "/default-avatar.png"}
+          src={userImage}
           alt="User Avatar"
           width={120}
           height={120}
           className={css.avatar}
-          priority
         />
-        <form action={handleAction} className={css.profileInfo}>
+
+        <form className={css.profileInfo} onSubmit={handleSave}>
           <div className={css.usernameWrapper}>
             <label htmlFor="username">Username:</label>
             <input
@@ -73,11 +65,15 @@ export default function EditProfilePage() {
               name="username"
               type="text"
               className={css.input}
-              defaultValue={username}
-              required
+              value={userName}
+              onChange={handleChange}
             />
           </div>
-          <p>Email: {user?.email}</p>
+
+          <p>Email: {userEmail}</p>
+
+          {error && <p className={css.error}>{error}</p>}
+
           <div className={css.actions}>
             <button type="submit" className={css.saveButton}>
               Save
@@ -85,7 +81,7 @@ export default function EditProfilePage() {
             <button
               type="button"
               className={css.cancelButton}
-              onClick={() => router.back()}
+              onClick={router.back}
             >
               Cancel
             </button>

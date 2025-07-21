@@ -1,52 +1,83 @@
-import { api } from "../../app/api/api";
+import { FetchNotesValues, Note } from "../../types/note";
+import { nextServer } from "./api";
 import { cookies } from "next/headers";
-import { Note } from "../../types/note";
-import { UserResponse } from "../../types/user";
-import { AxiosResponse } from "axios";
+import { ParamsTypes } from "./clientApi";
+import { LogInUser } from "../../types/user";
 
-interface SessionResponse {
-  accessToken: string;
-  refreshToken: string;
-}
-
-export async function getServerUser(): Promise<UserResponse | null> {
-  const cookieStore = cookies();
+export async function fetchServerNotes(
+  search: string,
+  page: number,
+  tag: string | undefined
+): Promise<FetchNotesValues | undefined> {
   try {
-    const response = await api.get<UserResponse>("/users/me", {
+    const cookieStore = await cookies();
+    const perPage = 12;
+    const params: ParamsTypes = {
+      tag,
+      page,
+      perPage,
+    };
+
+    if (search?.trim()) {
+      params.search = search;
+    }
+    if (tag?.trim()) {
+      params.tag = tag;
+    }
+
+    const res = await nextServer.get<FetchNotesValues>("/notes", {
+      params,
       headers: {
         Cookie: cookieStore.toString(),
       },
     });
-    return response.data;
-  } catch {
-    return null;
+    return res.data;
+  } catch (error) {
+    throw error;
   }
 }
 
-export async function getServerNote(id: string): Promise<Note | null> {
-  const cookieStore = cookies();
+export default async function fetchServerNoteById(
+  id: string
+): Promise<Note | undefined> {
   try {
-    const response = await api.get<Note>(`/notes/${id}`, {
+    const cookieStore = await cookies();
+    const res = await nextServer.get<Note>(`notes/${id}`, {
       headers: {
         Cookie: cookieStore.toString(),
       },
     });
-    return response.data;
-  } catch {
-    return null;
+    return res.data;
+  } catch (error) {
+    throw error;
   }
 }
 
-export async function checkSession(): Promise<AxiosResponse<SessionResponse> | null> {
-  const cookieStore = cookies();
+export async function serverSession() {
   try {
-    const response = await api.get("/auth/session", {
+    const cookieStore = await cookies();
+    const res = await nextServer.get("/auth/session", {
       headers: {
         Cookie: cookieStore.toString(),
       },
     });
-    return response; 
-  } catch {
-    return null;
+
+    return res;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function getServerMe(): Promise<LogInUser> {
+  try {
+    const cookieStore = await cookies();
+    const res = await nextServer.get("/users/me", {
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+    return res.data;
+  } catch (error) {
+    throw error;
   }
 }
